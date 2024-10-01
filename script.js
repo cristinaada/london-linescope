@@ -1,3 +1,6 @@
+function openRing() {
+    window.location.href = "ring.html";
+}
 
 var bufferSize = 1024;
 var bufferWidth = bufferSize;
