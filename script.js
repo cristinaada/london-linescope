@@ -68,14 +68,12 @@ var cubemap = THREE.ImageUtils.loadTextureCube(urls);
 cubemap.format = THREE.RGBFormat;
 
 /// buffer scene objects
-
 var numAxes = 12;
 var allShapes = [];
 var numShapes = 10;
 var complexity = 5;
 
-function createShapes()
-{
+function createShapes() {
 	for (var i=0; i<numShapes; i++)
 	{
 		var shape = new TorusKnotShape();
@@ -105,12 +103,10 @@ pointLight.position.set(0,50,-200);
 bufferScene.add(pointLight);
 
 
-
 // Kaleidoscope Grid
 var grid = new KaleidoscopeGrid(bufferTexture);
 
-function updateGridGeometry()
-{
+function updateGridGeometry() {
 	scene.remove(grid.mesh);
 	grid.createGeometry();
 	scene.add(grid.mesh);
@@ -126,9 +122,9 @@ scene.add(planeObj);
 planeObj.visible = false;
 
 
-const sliderr = document.getElementById('map-slider');
-sliderr.addEventListener('input', function(value) {
-	var value = Math.floor(sliderr.value/100)
+const mapSlider = document.getElementById('map-slider');
+mapSlider.addEventListener('input', function(value) {
+	var value = Math.floor(mapSlider.value/100)
 	var urls = [
 			'images/cubeMaps/' + value + '/pos-x.png',
 			'images/cubeMaps/' + value + '/neg-x.png',
@@ -141,8 +137,111 @@ sliderr.addEventListener('input', function(value) {
 	cubemap = THREE.ImageUtils.loadTextureCube(urls);
 	cubemap.format = THREE.RGBFormat;
 
+	imageGrid.images = urls;
+	reloadImageGrid();
+
 	document.dispatchEvent(new Event("updateMaterial"));
 });
+
+const imageGrid = {
+	group: new THREE.Group(), // Holds all image meshes
+	images: urls,
+	rows: 3, // Number of rows in the grid
+	cols: 2, // Number of columns in the grid
+};
+
+function createImageGrid() {
+	var { images, rows, cols, group } = imageGrid;
+
+	// Get the size of the container (assumes container is full window)
+	const containerWidth = window.innerWidth / 3;
+	const containerHeight = window.innerHeight / 1.5;
+
+	// Calculate the width and height of each image based on the container and grid size
+	const planeWidth = containerWidth / cols;
+	const planeHeight = containerHeight / rows;
+
+	images.forEach((imagePath, index) => {
+		// Load the texture
+		const textureLoader = new THREE.TextureLoader();
+		const texture = textureLoader.load(imagePath);
+
+		// Create material with the texture
+		const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+
+		// Define plane geometry based on the container size
+		const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+
+		// Create mesh
+		const mesh = new THREE.Mesh(geometry, material);
+
+		// Calculate position in grid
+		const row = Math.floor(index / cols);
+		const col = index % cols;
+
+		// Position mesh using the calculated width and height
+		mesh.position.x = (col - (cols - 1) / 2) * planeWidth;
+		mesh.position.y = ((rows - 1) / 2 - row) * planeHeight;
+		mesh.position.z = 0;
+
+		// Add mesh to the group
+		group.add(mesh);
+	});
+
+	// Add the group to the main scene
+	scene.add(group);
+}
+// Call the function to create the grid
+createImageGrid();
+// Initially, the grid is not visible
+imageGrid.group.visible = false;
+
+// Make sure to resize the grid when the window is resized
+window.addEventListener('resize', () => {
+	reloadImageGrid
+});
+
+function reloadImageGrid() {
+	scene.remove(imageGrid.group)
+	var vis = imageGrid.group.visible
+	imageGrid.group = new THREE.Group()
+	createImageGrid();
+	imageGrid.group.visible = vis;
+}
+
+const switchButton = document.getElementById('switch');
+switchButton.addEventListener('click', toggleImages);
+
+function toggleImages() {
+	if (imageGrid.group.visible) {
+		hideImageGrid()
+	} else {
+		showImageGrid()
+	}
+}
+
+function showImageGrid() {
+	// Hide animated shapes
+	allShapes.forEach(shape => {
+	  shape.mesh.visible = false;
+	});
+  
+	// Show the image grid
+	imageGrid.group.visible = true;
+  	isPaused = true;
+}
+  
+function hideImageGrid() {
+	// Show animated shapes
+	allShapes.forEach((shape, index) => {
+	  shape.mesh.visible = index < complexity; // Adjust visibility based on complexity
+	});
+  
+	// Hide the image grid
+	imageGrid.group.visible = false;
+  	isPaused = false;
+}
+
 
 /* No need for GUI outside debugging.
 // GUI

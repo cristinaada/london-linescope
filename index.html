@@ -39,6 +39,7 @@
 				left: 0; /* Set this to 0 to position the slider on the left edge */
 				transform: translateY(-50%); /* Center vertically */
 				border-radius: 20px;
+				z-index: 0;
 			}
 
 			.map-slider {
@@ -52,7 +53,15 @@
 				padding-left: 20px;
 				padding-top: 100px;
 				border-radius: 20px;
+				z-index: 1;
 			}
+
+
+			button {
+				position: absolute;
+      			height: 40px;
+				z-index: 2;
+    		}
 
 			input[type="range"] {
 				width: 90%;
@@ -96,6 +105,7 @@
 		<div class="container">
 			<img src="images/map.png" alt="Map" id="image" class="image">
 			<input type="range" min="100" max="2099" value="1" class="map-slider" id="map-slider">
+			<button class="switch" id="switch">View Images</button>
 		</div>
 
 		<div id="kaleidoscope-container"></div>
